@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import {ReactFloatingBalloons} from '../src';
 
@@ -45,4 +45,6 @@ class App extends React.Component {
   }
 }
 
-ReactDOM.render(<App />, document.getElementById('content'));
+const container = document.getElementById('content');
+const root = createRoot(container);
+root.render(<App />);
