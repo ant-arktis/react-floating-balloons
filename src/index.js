@@ -10,6 +10,9 @@ const ReactFloatingBalloons = ({
 	popVolumeLevel = 0.5,
 	loop = true,
 	hangOnTop = false,
+	staticMode = false,
+	floatingAnimation = false,
+	onBalloonPop = null,
 	// duration = 10000,
 	// delay = 100,
 	// name,
@@ -23,7 +26,7 @@ const ReactFloatingBalloons = ({
 	}
 	return createPortal(
 		<div id='portal-balloons'>
-			{CSR ? <Balloons {...{count, msgText, colors, popVolumeLevel, loop, hangOnTop}}/> : null}
+			{CSR ? <Balloons {...{count, msgText, colors, popVolumeLevel, loop, hangOnTop, staticMode, floatingAnimation, onBalloonPop}}/> : null}
 		</div>,
 		document.body
 	);

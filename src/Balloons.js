@@ -1,7 +1,7 @@
 import mojs from "@mojs/core";
 import React, { useState } from "react";
 
-import { StyledBalloon } from "./Balloon.styles";
+import { StyledBalloon, StaticBalloonsContainer } from "./Balloon.styles";
 import { random, randomColor } from "./utils";
 
 export const Balloon = ({
@@ -11,6 +11,10 @@ export const Balloon = ({
   loop,
   hangOnTop,
   supportsTouch,
+  staticMode,
+  floatingAnimation,
+  onBalloonPop,
+  balloonIndex,
 }) => {
   const delay = random(0, 4);
   const hasMsg = random(0, 2);
@@ -18,6 +22,11 @@ export const Balloon = ({
   const left = random(10, 70); // random init left value to fly
   const [show, setShow] = useState(true);
   const [visible, setVisible] = useState(true);
+  
+  // Floating animation parameters for static mode
+  const floatingDelay = random(0, 3); // Random delay for each balloon
+  const floatingDuration = 2 + random(1, 3); // Duration between 2-5 seconds
+  const floatingAmplitude = random(8, 15); // Vertical movement amplitude in pixels
   let audio = new Audio(
     "https://cdn.pixabay.com/audio/2022/03/10/audio_5b4d3bfb9e.mp3"
   );
@@ -26,6 +35,12 @@ export const Balloon = ({
   const popBalloon = (e) => {
     let t = e.currentTarget;
     let color = t.getAttribute("color");
+    
+    // Get balloon center coordinates relative to viewport
+    const rect = t.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
     const burst = new mojs.Burst({
       radius: { 30: 100 },
       parent: t,
@@ -40,6 +55,23 @@ export const Balloon = ({
     });
     audio.play();
     burst.replay();
+    
+    // Call the parent callback with balloon info and coordinates
+    if (onBalloonPop) {
+      onBalloonPop({
+        balloonIndex,
+        color,
+        centerX,
+        centerY,
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height
+        }
+      });
+    }
+    
     // setVisible(false)
     t.style.visibility = "hidden";
     setTimeout(() => {
@@ -63,6 +95,14 @@ export const Balloon = ({
           }}
           show={show}
           visible={visible}
+          staticMode={staticMode}
+          floatingAnimation={floatingAnimation}
+          floatingParams={{
+            delay: floatingDelay,
+            duration: floatingDuration,
+            amplitude: floatingAmplitude,
+          }}
+          balloonIndex={balloonIndex}
         >
           <div className="string"></div>
           {hasMsg ? <span className="msg">{msgText}</span> : null}
@@ -79,11 +119,14 @@ export const Balloons = ({
   popVolumeLevel,
   loop,
   hangOnTop,
+  staticMode,
+  floatingAnimation,
+  onBalloonPop,
 }) => {
   const density = count; // concurrent balloon count
   const supportsTouch = "ontouchstart" in window || navigator.msMaxTouchPoints;
   return (
-    <div className="set-of-balloons">
+    <StaticBalloonsContainer className={`set-of-balloons ${staticMode ? 'static-mode' : ''}`}>
       {new Array(density).fill(null).map((b, i) => (
         <Balloon
           key={`balloon-${i}`}
@@ -94,9 +137,13 @@ export const Balloons = ({
             loop,
             hangOnTop,
             supportsTouch,
+            staticMode,
+            floatingAnimation,
+            onBalloonPop,
+            balloonIndex: i,
           }}
         />
       ))}
-    </div>
+    </StaticBalloonsContainer>
   );
 };

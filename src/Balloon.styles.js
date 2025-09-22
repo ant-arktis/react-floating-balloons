@@ -69,28 +69,58 @@ const colorMaps = {
   red: 'rgba(150, 0, 0, .75)',
 }
 
+const floatingAnimation = keyframes`
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-${props => props.floatingParams?.amplitude || 10}px);
+  }
+`;
+
 export const StyledBalloon = styled.div`
   // top: 100px;
   background-color: ${props => colorMaps[props.color]};
   display: ${props => props.show ? 'block' : 'none'};
   visibility: ${props => props.visible ? 'visible' : 'hidden'};
-  left: ${props => `${props.animate.left}vw`};
+  left: ${props => props.staticMode ? 'auto' : `${props.animate.left}vw`};
   transition: transform 0.5s ease;
   z-index: 10;
-  animation: ${props => props.animate.left > 50 ? balloonsRightUpKFAnimation(props.animate): balloonsLeftUpKFAnimation(props.animate)} ease-in-out ${props => props.animate.loop ? 'infinite' : '1'};
+  animation: ${props => {
+    if (props.staticMode && props.floatingAnimation) {
+      return `${floatingAnimation} ${props.floatingParams?.duration || 3}s ease-in-out infinite`;
+    }
+    return props.staticMode ? 'none' : (props.animate.left > 50 ? balloonsRightUpKFAnimation(props.animate): balloonsLeftUpKFAnimation(props.animate)) + ' ease-in-out ' + (props.animate.loop ? 'infinite' : '1');
+  }};
   // animation-duration: 3s;
-  animation-duration: ${props => `${props.animate.duration}s`};
-  animation-delay ${props => `${props.animate.delay}s`};
-  animation-fill-mode: ${props => props.animate.hangOnTop ? 'forwards' : 'none'};
+  animation-duration: ${props => {
+    if (props.staticMode && props.floatingAnimation) {
+      return `${props.floatingParams?.duration || 3}s`;
+    }
+    return props.staticMode ? 'none' : `${props.animate.duration}s`;
+  }};
+  animation-delay: ${props => {
+    if (props.staticMode && props.floatingAnimation) {
+      return `${props.floatingParams?.delay || 0}s`;
+    }
+    return props.staticMode ? 'none' : `${props.animate.delay}s`;
+  }};
+  animation-fill-mode: ${props => props.staticMode ? 'none' : (props.animate.hangOnTop ? 'forwards' : 'none')};
   transform-origin:bottom center;
   --balloonDimension: 15vmax; /* 15% of min(viewport width, height) */
   width: var(--balloonDimension);
   height: var(--balloonDimension);
   border-radius: 100% 100% 15% 100%;
-  margin: 0 0 0 25px;
-  transform: rotateZ(45deg);
-  position: fixed;
-  bottom: calc(-1 * var(--balloonDimension));
+  margin: ${props => props.staticMode ? '10px' : '0 0 0 25px'};
+  transform: ${props => {
+    if (props.staticMode && props.floatingAnimation) {
+      return 'rotateZ(0deg)';
+    }
+    return props.staticMode ? 'rotateZ(0deg)' : 'rotateZ(45deg)';
+  }};
+  position: ${props => props.staticMode ? 'relative' : 'fixed'};
+  bottom: ${props => props.staticMode ? 'auto' : 'calc(-1 * var(--balloonDimension))'};
+  top: ${props => props.staticMode ? 'auto' : 'auto'};
   &::before {
     content: "";
     width: 10%;
@@ -134,6 +164,19 @@ export const StyledBalloon = styled.div`
   .show {
     display: block;
     visibility: visible;
+  }
+`;
+
+export const StaticBalloonsContainer = styled.div`
+  &.static-mode {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    position: relative;
+    z-index: 10;
   }
 `;
 
